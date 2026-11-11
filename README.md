@@ -1,155 +1,157 @@
-# Registro de Averías
+# Registro de Averías · Breakdown Log
 
-**Los operarios avisan de una avería en 20 segundos, mantenimiento la ve ordenada por urgencia y el jefe de mantenimiento sabe qué máquina para más.**
+**Operators report a machine breakdown in 20 seconds, maintenance sees it sorted by urgency, and the maintenance manager knows which machine stops the most.**
 
-Proyecto final del curso *Building Digital Products with Generative AI* (2026) · Jorge Iglesias Alsina.
+Final project of the course *Building Digital Products with Generative AI* (2026) · Jorge Iglesias Alsina.
 
-![Indicadores por máquina](docs/screenshots/indicators.png)
+![Indicators per machine](docs/screenshots/indicators.png)
 
 ---
 
-## 1. Qué es
+## 1. What it is
 
-**El problema.** En muchas plantas industriales pequeñas y medianas, las averías se avisan de palabra o se apuntan en papel. Lo vi durante mis prácticas en una fábrica de film plástico: el técnico no tiene una lista de lo pendiente, nadie sabe cuánto tiempo estuvo parada cada máquina y decidir dónde hacer mantenimiento preventivo es pura intuición.
+**The problem.** In many small and medium manufacturing plants, breakdowns are reported by word of mouth or written on paper. I saw it first-hand during my internship at a plastic film factory: technicians have no list of what is pending, nobody knows how long each machine was stopped, and deciding where to do preventive maintenance is pure intuition.
 
-**Para quién.** Para tres personas de la misma planta:
+**Who it is for.** Three people in the same plant:
 
-| Usuario | Qué necesita |
+| User | What they need |
 | --- | --- |
-| Operario de línea | Avisar de una avería rápido, desde un móvil o una tablet, sin buscar a nadie |
-| Técnico de mantenimiento | Saber qué atender primero |
-| Jefe de mantenimiento | Ver qué máquinas paran más y cuánto se tarda en resolverlas |
+| Line operator | Report a breakdown quickly, from a phone or a tablet, without looking for anyone |
+| Maintenance technician | Know what to attend to first |
+| Maintenance manager | See which machines stop the most and how long it takes to fix them |
 
-**Momento mínimo de valor.** El operario registra la avería y el técnico la tiene arriba de su lista, ordenada por prioridad, sin una sola llamada.
+**Minimum moment of value.** The operator reports the breakdown and the technician has it at the top of their list, sorted by priority, without a single phone call.
 
-## 2. Funcionalidades
+> **Language choice.** The user interface is in Spanish because the end users are Spanish plant workers. Code, commits and documentation are in English.
 
-Historias de usuario del MVP, todas implementadas y con tests:
+## 2. Features
 
-| # | Historia de usuario | Estado |
+MVP user stories, all implemented and tested:
+
+| # | User story | Status |
 | --- | --- | --- |
-| US-01 | Como **operario de línea**, quiero registrar una avería (máquina, descripción, prioridad y si la máquina está parada) para que mantenimiento se entere al momento sin papel. | ✅ MVP |
-| US-02 | Como **técnico de mantenimiento**, quiero ver las averías pendientes ordenadas por prioridad y cambiar su estado (abierta → en reparación → resuelta) para saber qué atender primero. | ✅ MVP |
-| US-03 | Como **jefe de mantenimiento**, quiero ver por máquina el número de averías, las horas de parada y el MTTR para decidir dónde invertir en mantenimiento preventivo. | ✅ MVP |
+| US-01 | As a **line operator**, I want to report a breakdown (machine, description, priority and whether the machine is stopped), so that maintenance knows about it immediately without paper. | ✅ MVP |
+| US-02 | As a **maintenance technician**, I want to see the pending breakdowns sorted by priority and change their status (open → in progress → resolved), so that I know what to attend to first. | ✅ MVP |
+| US-03 | As the **maintenance manager**, I want to see per machine the number of breakdowns, the downtime hours and the MTTR, so that I can decide where to invest in preventive maintenance. | ✅ MVP |
 
-**Backlog** (fuera del MVP a propósito): base de datos compartida con usuarios y login, exportar a CSV o Excel, avisos al técnico (correo o notificación), indicadores MTBF y OEE, y una pantalla para dar de alta máquinas.
+**Backlog** (left out of the MVP on purpose): a shared database with users and login, CSV/Excel export, alerts to the technician (email or notification), MTBF and OEE indicators, and a screen to manage machines.
 
-**Qué hace cada pantalla**
+**What each screen does**
 
-- **Registrar** (`/`): formulario pensado para móvil. Valida los campos en español y recuerda el nombre del operario para el siguiente aviso.
-- **Averías** (`/breakdowns`): pendientes ordenadas por prioridad, después las que tienen la máquina parada y después las más antiguas. Cada una se puede pasar a *En reparación* o a *Resuelta*. Incluye una pestaña de historial con las resueltas.
-- **Indicadores** (`/indicators`): averías totales, pendientes, horas de parada y MTTR de la planta, más una tabla por máquina ordenada por horas de parada.
+- **Registrar · Report** (`/`): mobile-first form. Validates the fields with messages in Spanish and remembers the operator's name for the next report.
+- **Averías · Breakdowns** (`/breakdowns`): pending breakdowns sorted by priority, then stopped machines first, then the oldest. Each one can be moved to *In progress* or *Resolved*. A history tab lists the resolved ones.
+- **Indicadores · Indicators** (`/indicators`): total breakdowns, pending, downtime hours and MTTR of the plant, plus a table per machine sorted by downtime.
 
-**Cómo se calculan los indicadores**
+**How the indicators are calculated**
 
-- **Horas de parada.** Solo cuentan las averías con *máquina parada*, desde el aviso hasta la resolución. Si siguen abiertas, cuentan hasta ahora.
-- **MTTR** (*Mean Time To Repair*). Tiempo medio desde el aviso hasta la resolución de las averías resueltas.
+- **Downtime hours.** Only breakdowns that stop the machine count, from the report to the resolution. While still open, they count until now.
+- **MTTR** (*Mean Time To Repair*). Average time from the report to the resolution of the resolved breakdowns.
 
-| Registrar (móvil) | Averías pendientes (móvil) |
+| Report (mobile) | Pending breakdowns (mobile) |
 | --- | --- |
-| ![Registrar](docs/screenshots/mobile-report.png) | ![Lista](docs/screenshots/mobile-list.png) |
+| ![Report](docs/screenshots/mobile-report.png) | ![List](docs/screenshots/mobile-list.png) |
 
-## 3. Cómo ejecutarlo
+## 3. How to run it
 
-**URL pública:** `https://[tu-proyecto].vercel.app` *(se completa al desplegar en Vercel)*
+**Live app:** https://breakdown-log-alpha.vercel.app
 
-Hay un **modo demostración** en el pie de la página: *Cargar datos de ejemplo* rellena la app con 14 averías realistas de una planta de film plástico, y *Borrar todos los datos* la deja vacía.
+There is a **demo mode** in the page footer: *Cargar datos de ejemplo* (load sample data) fills the app with 14 realistic breakdowns from a plastic film plant, and *Borrar todos los datos* (delete all data) empties it.
 
-### Requisitos
+### Requirements
 
-- Node.js 20 o superior, **o** Docker, **o** VS Code con la extensión Dev Containers.
-- No necesita variables de entorno. El `.env.example` documenta las que harán falta cuando haya base de datos.
+- Node.js 20 or later, **or** Docker, **or** VS Code with the Dev Containers extension.
+- No environment variables are needed. `.env.example` documents the ones a future database will need.
 
-### Opción A · Node.js
+### Option A · Node.js
 
 ```bash
 npm install
 npm run dev        # http://localhost:5173
 ```
 
-### Opción B · Docker
+### Option B · Docker
 
 ```bash
-docker compose up                                        # desarrollo -> http://localhost:5173
+docker compose up                                        # development -> http://localhost:5173
 docker build --target prod -t breakdown-log . \
-  && docker run -p 8080:80 breakdown-log                 # producción con Nginx -> http://localhost:8080
+  && docker run -p 8080:80 breakdown-log                 # production with Nginx -> http://localhost:8080
 ```
 
-### Opción C · DevContainer
+### Option C · DevContainer
 
-Abre la carpeta en VS Code y elige **Reopen in Container**. El contenedor trae Node 22, Git, GitHub CLI y las extensiones de Vue, Tailwind y Vitest, y ejecuta `npm install` él solo.
+Open the folder in VS Code and choose **Reopen in Container**. The container comes with Node 22, Git, GitHub CLI and the Vue, Tailwind and Vitest extensions, and runs `npm install` on its own.
 
-### Tests y calidad
+### Tests and quality
 
 ```bash
-npm test           # 50 tests con Vitest (dominio, servicio, store, componentes y vistas)
-npm run lint       # comprobación de tipos con vue-tsc
-npm run build      # build de producción en dist/
+npm test           # 50 Vitest tests (domain, service, store, components and views)
+npm run lint       # type-check with vue-tsc
+npm run build      # production build to dist/
 ```
 
-GitHub Actions (`.github/workflows/ci.yml`) ejecuta los tres en cada push y en cada pull request a `main` y `develop`.
+GitHub Actions (`.github/workflows/ci.yml`) runs all three on every push and pull request to `main` and `develop`.
 
-### Despliegue en Vercel
+### Deploying on Vercel
 
-1. Vercel → **Add New → Project** → importar este repositorio.
-2. Vercel detecta Vite: comando `npm run build`, salida `dist`, rama de producción `main` → **Deploy**.
-3. `vercel.json` redirige todas las rutas a `index.html` (la app usa rutas del navegador). `/api/health` es una función que responde `{"status":"ok"}` para vigilar la web con UptimeRobot.
+1. Vercel → **Add New → Project** → import this repository.
+2. Vercel detects Vite: build command `npm run build`, output `dist`, production branch `main` → **Deploy**.
+3. `vercel.json` sends every route to `index.html` (the app uses browser routing). `/api/health` is a function that answers `{"status":"ok"}`, for uptime monitoring with UptimeRobot.
 
-### Estructura
+### Structure
 
 ```
 src/
-  views/        páginas: ReportView, BreakdownsView, IndicatorsView
+  views/        pages: ReportView, BreakdownsView, IndicatorsView
   components/   BreakdownForm, BreakdownCard, KpiTile, DemoBar
-  stores/       Pinia: estado de las averías
-  services/     acceso a datos: la ÚNICA capa que toca el almacenamiento
-  domain/       lógica pura y testeada: validación, orden, estados, MTTR
-  types/  data/ modelos, máquinas de la planta y datos de ejemplo
-tests/          50 tests, con la misma estructura que src/
-api/health.ts   función de Vercel para la monitorización
-docs/           proceso con IA y capturas
+  stores/       Pinia: breakdowns state
+  services/     data access: the ONLY layer that touches storage
+  domain/       pure, tested logic: validation, ordering, statuses, MTTR
+  types/  data/ models, plant machines and sample data
+tests/          50 tests, mirroring src/
+api/health.ts   Vercel function for monitoring
+docs/           AI workflow and screenshots
 ```
 
-## 4. Cómo se construyó con IA
+## 4. How it was built with AI
 
-Lo construí con **Claude** (Anthropic) como agente, siguiendo el flujo de trabajo del curso: *requisito → prompt → plan → ejecución y prueba → commit*.
+I built it with **Claude** (Anthropic) as the agent, following the course workflow: *requirement → prompt → plan → execution and test → commit*.
 
-**Mi papel:** definir el problema a partir de mi experiencia en planta, elegir la idea y el alcance, decidir qué quedaba fuera del MVP y revisar el resultado. **El papel del agente:** proponer y escribir el código, los tests y la configuración, y probarlo todo en un navegador real antes de cada merge.
+**My role:** defining the problem from my experience in a plant, choosing the idea and the scope, deciding what stayed out of the MVP and reviewing the result. **The agent's role:** proposing and writing the code, the tests and the configuration, and testing everything in a real browser before each merge.
 
-**Entorno para el agente**
+**Environment for the agent**
 
-- [`CLAUDE.md`](CLAUDE.md) con el problema, las historias de usuario, el stack, la arquitectura, las definiciones de los indicadores y las reglas de trabajo. Por ejemplo: *"implement only the user story requested"*, *"never change a test just to make it pass"* o *"UI in Spanish, code in English"*.
-- Ramas: `main` (producción) y `develop` (integración). Cada historia en su propia rama `feature/…`, unida con `--no-ff`. Commits en formato Conventional Commits.
-- DevContainer, Docker multi-etapa y CI en GitHub Actions desde el primer día, antes de escribir funcionalidades.
+- [`CLAUDE.md`](CLAUDE.md) with the problem, the user stories, the stack, the architecture, the definitions of the indicators and the working rules, such as *"implement only the user story requested"*, *"never change a test just to make it pass"* or *"UI in Spanish, code in English"*.
+- Branches: `main` (production) and `develop` (integration). Every story in its own `feature/…` branch, merged with `--no-ff`. Conventional Commits.
+- DevContainer, multi-stage Docker and CI on GitHub Actions from day one, before writing any feature.
 
-**El ciclo de cada historia** (detalle y prompts completos en [`docs/ai-workflow.md`](docs/ai-workflow.md))
+**The cycle of each story** (details and full prompts in [`docs/ai-workflow.md`](docs/ai-workflow.md))
 
-1. Prompt con la historia y sus criterios de aceptación, en una rama `feature/` creada desde `develop`.
-2. El agente implementa y escribe los tests de casos normales, límite y errores.
-3. Se ejecutan la suite completa, la comprobación de tipos y el build.
-4. Se prueba en un navegador real con Playwright (móvil y escritorio) y se revisan capturas.
-5. Commit, merge a `develop` y la siguiente historia.
+1. A prompt with the story and its acceptance criteria, on a `feature/` branch created from `develop`.
+2. The agent implements it and writes tests for normal cases, edge cases and errors.
+3. The whole suite, the type-check and the build are run.
+4. It is tested in a real browser with Playwright (mobile and desktop) and the screenshots are reviewed.
+5. Commit, merge into `develop`, and on to the next story.
 
-**El prompt de US-02** (plantilla 4.1 del curso, adaptada a la historia):
+**The US-02 prompt** (course template 4.1, adapted to the story):
 
 > I want to build this feature: As a maintenance technician, I want to see the open breakdowns sorted by priority and change their status (open → in progress → resolved), so that I know what to attend to first. Acceptance criteria: high priority first, then stopped machines, then the oldest; a resolved breakdown cannot be reopened; a quick fix can go straight from open to resolved; every change is saved. Create a feature/breakdown-list branch from develop. Before writing any code, explain your plan and which files you will touch. Follow the conventions in CLAUDE.md and don't add anything that is not in the criteria.
 
-**Qué funcionó bien**
+**What worked well**
 
-- **Separar la lógica pura** (`src/domain/`) de la interfaz permitió probar las reglas de negocio (orden de prioridad, transiciones de estado, MTTR) con tests rápidos y deterministas: 50 tests en unos 3 segundos.
-- **La revisión visual** encontró lo que los tests no veían. En US-02, la tarjeta de una avería urgente salía con un borde negro en lugar de solo el borde rojo, y se corrigió antes del merge.
-- **Escribir las definiciones** de "horas de parada" y "MTTR" en el CLAUDE.md evitó ambigüedades: el agente y los tests usan exactamente las mismas fórmulas.
+- **Separating the pure logic** (`src/domain/`) from the interface made it possible to test the business rules (priority order, status transitions, MTTR) with fast, deterministic tests: 50 tests in about 3 seconds.
+- **Visual review** caught what the tests missed. In US-02 the card of an urgent breakdown had a black border instead of just the red one, and it was fixed before the merge.
+- **Writing down the definitions** of "downtime" and "MTTR" in CLAUDE.md removed ambiguity: the agent and the tests use exactly the same formulas.
 
-**Qué costó o no salió como esperaba**
+**What was hard or did not go as expected**
 
-- **Los datos viven en un solo navegador.** Al probar con dos navegadores distintos se vio claro: lo que registra el operario en su móvil **no aparece en el PC del técnico**. El MVP funciona como un *terminal compartido* (una tablet en el taller o en la línea), pero el valor completo necesita una base de datos compartida. La capa `services/` está aislada justo para cambiar `localStorage` por una API sin tocar vistas ni stores.
-- **Docker y el DevContainer no se pudieron ejecutar** en el entorno del agente, que no tenía acceso a Docker Hub. Los archivos siguen la estructura vista en el curso, pero se validan en mi equipo.
-- **Para la demo hacían falta datos realistas.** Con la app vacía, los indicadores no enseñan nada, así que se añadió un cargador de datos de ejemplo, también con tests que comprueban que las fechas son coherentes.
+- **The data lives in a single browser.** Testing with two different browsers made it clear: what the operator reports on their phone **does not appear on the technician's PC**. The MVP works as a *shared terminal* (a tablet in the workshop or on the line), but the full value needs a shared database. The `services/` layer is isolated precisely so that `localStorage` can be replaced by an API without touching views or stores.
+- **Docker and the DevContainer could not be run** in the agent's environment, which had no access to Docker Hub. The files follow the structure seen in the course, but they still have to be run on a computer with Docker.
+- **The demo needed realistic data.** With an empty app the indicators show nothing, so a sample data loader was added, with tests that check its dates are consistent.
 
-## 5. Estado y próximos pasos
+## 5. Status and next steps
 
-**Estado: MVP v0.1.0 completo.** Las 3 historias funcionan en móvil y escritorio, con 50 tests en verde, comprobación de tipos y build correctos, y la configuración de Vercel, Docker, DevContainer y CI preparada.
+**Status: MVP v0.1.0 complete.** The 3 stories work on mobile and desktop, with 50 passing tests, a clean type-check and build, and the Vercel, Docker, DevContainer and CI configuration ready.
 
-**Lo que no hace todavía:** compartir datos entre dispositivos, identificar usuarios, avisar al técnico ni dar de alta máquinas (están en `src/data/machines.ts`).
+**What it does not do yet:** share data between devices, identify users, alert the technician or manage machines (they are listed in `src/data/machines.ts`).
 
-**Siguiente paso natural (v0.2.0):** una **base de datos compartida** (Vercel Postgres o Supabase) a través de funciones en `/api`. Así el aviso del operario llega de verdad al técnico en otro dispositivo, que es la promesa principal del producto. Después vendrían el login por rol (operario, técnico y jefe), exportar a CSV o Excel y los indicadores MTBF y OEE.
+**Natural next step (v0.2.0):** a **shared database** (Vercel Postgres or Supabase) through functions in `/api`. That way the operator's report really reaches the technician on another device, which is the main promise of the product. After that: login by role (operator, technician, manager), CSV/Excel export and the MTBF and OEE indicators.

@@ -1,81 +1,81 @@
-# Proceso con IA: de la idea al MVP
+# AI workflow: from idea to MVP
 
-Registro de cómo se construyó *Registro de Averías* con un agente de IA (Claude), siguiendo el flujo de trabajo del curso (*Development workflow with AI agents*): preparar el proyecto (3.1–3.3) y repetir un ciclo por historia de usuario (4.1–4.4).
+How *Registro de Averías* (Breakdown Log) was built with an AI agent (Claude), following the course workflow (*Development workflow with AI agents*): set up the project (steps 3.1–3.3) and repeat one cycle per user story (steps 4.1–4.4).
 
-## 0. Punto de partida: definir la idea
+## 0. Starting point: defining the idea
 
-Partí del encargo del proyecto final y de la plantilla *Alcance y requisitos del MVP* (módulo 5). El agente propuso cuatro ideas ligadas a mi perfil (automática industrial): un registro de averías, un explorador de datos de PLC, un presupuestador y una calculadora de cables. **Elegí el registro de averías** porque es un problema que vi de cerca en mis prácticas en planta y porque se entiende en un minuto.
+I started from the final project brief and the *MVP scope and requirements* template (module 5). The agent proposed four ideas related to my background in industrial automation: a breakdown log, a PLC data explorer, a quote builder and a cable sizing calculator. **I chose the breakdown log** because I saw the problem first-hand during my internship in a plant, and because it can be understood in one minute.
 
-| Pregunta | Respuesta |
+| Question | Answer |
 | --- | --- |
-| ¿Qué problema resuelve? | Las averías se avisan de palabra o en papel: mantenimiento no ve lo pendiente y nadie mide qué máquina para más. |
-| ¿Para quién? | Operarios, técnicos y jefe de mantenimiento de una planta pequeña o mediana. |
-| ¿Momento mínimo de valor? | El operario registra la avería y el técnico la tiene arriba de su lista, sin llamadas. |
+| What problem does it solve? | Breakdowns are reported by word of mouth or on paper: maintenance cannot see what is pending and nobody measures which machine stops the most. |
+| Who is it for? | Operators, technicians and the maintenance manager of a small or medium plant. |
+| Minimum moment of value? | The operator reports the breakdown and the technician has it at the top of their list, without phone calls. |
 
-Decisiones de alcance:
+Scope decisions:
 
-- **3 historias en el MVP** (registrar, atender, medir) y el resto al backlog.
-- **Sin base de datos en el MVP**, para poder publicarlo y defenderlo a tiempo. La capa `services/` queda preparada para cambiarla.
-- **Interfaz en español** (los usuarios son operarios de planta) y **código en inglés** (convención del curso).
+- **3 stories in the MVP** (report, attend, measure) and the rest in the backlog.
+- **No database in the MVP**, so it could be published and presented on time. The `services/` layer is ready to swap it.
+- **User interface in Spanish** (the users are Spanish plant workers) and **code and documentation in English** (course convention).
 
-## 1. Preparar el proyecto (pasos 1–3.3)
+## 1. Setting up the project (steps 1–3.3)
 
-**Paso 1–2 · Repositorio y ramas**
+**Steps 1–2 · Repository and branches**
 
 ```bash
 git init -b main && git commit -m "chore: initialize repository"
 git switch -c develop
 ```
 
-**Prompt 3.2 · README y CLAUDE.md, sin código**
+**Prompt 3.2 · README and CLAUDE.md, no code**
 
 > We are starting a new project in this folder. The project is: a web app for small and medium manufacturing plants where line operators report machine breakdowns in seconds, maintenance technicians see them sorted by priority and update their status, and the maintenance manager sees downtime and MTTR per machine to decide where preventive maintenance pays off. Stack: Vue 3 + Vite + TypeScript + Tailwind + Pinia + Vitest, deployed on Vercel. Create: 1. A README.md with the project description… 2. A CLAUDE.md with the description, the stack, the conventions, and these working rules: Git workflow (main is production and develop is integration; each feature goes in a feature/<name> branch created from develop); Conventional Commits; the development environment is a DevContainer; the application is deployed with Docker; never write secrets in the code. Don't write any application code yet.
 
-Resultado: `docs: add project definition in readme and claude.md`. El CLAUDE.md incluye además las definiciones exactas de *horas de parada* y *MTTR*, para que el código y los tests usen las mismas fórmulas.
+Result: `docs: add project definition in readme and claude.md`. CLAUDE.md also includes the exact definitions of *downtime* and *MTTR*, so that the code and the tests use the same formulas.
 
-**Prompt 3.3 · Esqueleto**
+**Prompt 3.3 · Skeleton**
 
 > Read the README.md and the CLAUDE.md and set up the project so we can start building, working on the develop branch: create the folder structure and the minimal skeleton for the stack; add .devcontainer/devcontainer.json, Dockerfile, docker-compose.yml, .gitignore, and .env.example; set up the test framework and leave one example test that passes. Make small commits in the Conventional Commits format. When you finish, tell me how to run the project and how to run the tests.
 
-Resultado: tres commits pequeños (esqueleto Vue, Docker y DevContainer, CI con Vercel y `/api/health`). Test de ejemplo, comprobación de tipos y build en verde.
+Result: three small commits (Vue skeleton; Docker and DevContainer; CI with the Vercel configuration and `/api/health`). Example test, type-check and build all passing.
 
-## 2. Construir el MVP: un ciclo por historia
+## 2. Building the MVP: one cycle per story
 
-En cada historia: **4.1** prompt con la historia y sus criterios → **4.2** tests (normales, límite y errores) y suite completa → **4.3** prueba humana en navegador → **4.4** commit y merge a `develop`.
+For every story: **4.1** prompt with the story and its criteria → **4.2** tests (normal cases, edge cases, errors) and the full suite → **4.3** human test in the browser → **4.4** commit and merge into `develop`.
 
-### US-01 · Registrar una avería (`feature/report-breakdown`)
+### US-01 · Report a breakdown (`feature/report-breakdown`)
 
 > I want to build this feature: As a line operator, I want to report a breakdown (machine, description, priority, whether the machine is stopped), so that maintenance knows about it immediately without paper. Acceptance criteria: the machine is chosen from the plant list; the description has 5–500 characters; priority and the operator's name are required; errors are shown in Spanish; the breakdown is saved and survives a page reload; a confirmation is shown and the form is cleared, keeping the operator's name. Create a feature/report-breakdown branch from develop. Before writing any code, explain your plan and which files you will touch, and wait for my approval. Follow the conventions in CLAUDE.md and don't add anything that is not in the criteria.
 
-- **Tests (4.2):** 15 tests sobre la validación, el servicio de almacenamiento (incluido el caso de datos corruptos), el store y el formulario.
-- **Prueba en navegador (4.3):** formulario vacío → 4 errores en español; avería registrada → confirmación; tras recargar, la avería sigue guardada.
+- **Tests (4.2):** 15 tests covering validation, the storage service (including corrupted data), the store and the form.
+- **Browser test (4.3):** empty form → 4 errors in Spanish; breakdown reported → confirmation; after reloading, the breakdown is still saved.
 
-### US-02 · Lista por prioridad y estados (`feature/breakdown-list`)
+### US-02 · Priority list and statuses (`feature/breakdown-list`)
 
 > I want to build this feature: As a maintenance technician, I want to see the open breakdowns sorted by priority and change their status (open → in progress → resolved), so that I know what to attend to first. Acceptance criteria: high priority first, then stopped machines, then the oldest; a resolved breakdown cannot be reopened; a quick fix can go straight from open to resolved; every change is saved; resolved breakdowns are kept in a history tab. Create a feature/breakdown-list branch from develop. Before writing any code, explain your plan…
 
-- **Tests:** orden de prioridad, transiciones permitidas y prohibidas, formato de duraciones y la vista completa. 33 tests en total.
-- **Prueba en navegador:** 3 averías registradas en desorden aparecen bien ordenadas. **Se encontró un fallo visual** (la tarjeta urgente salía con un borde negro) y se corrigió antes del merge.
+- **Tests:** priority order, allowed and forbidden transitions, duration formatting and the full view. 33 tests in total.
+- **Browser test:** 3 breakdowns reported in random order appear correctly sorted. **A visual bug was found** (the urgent card had a black border) and fixed before the merge.
 
-### US-03 · Indicadores por máquina (`feature/maintenance-indicators`)
+### US-03 · Indicators per machine (`feature/maintenance-indicators`)
 
 > I want to build this feature: As the maintenance manager, I want to see per machine the number of breakdowns, the downtime hours and the MTTR, so that I can decide where to invest in preventive maintenance. Acceptance criteria: downtime only counts breakdowns with the machine stopped, from the report to the resolution (or until now if still open); MTTR is the average time from report to resolution of resolved breakdowns; machines without breakdowns appear with empty values; the table is sorted by downtime; plant totals are shown on top. Create a feature/maintenance-indicators branch from develop. Before writing any code, explain your plan…
 
-- **Tests:** cálculo de parada (resuelta, en curso, sin parada), MTTR (incluido "sin resueltas" → `—`), orden de la tabla, máquinas desconocidas y la vista. 46 tests en total.
+- **Tests:** downtime (resolved, ongoing, machine not stopped), MTTR (including "nothing resolved" → `—`), table order, unknown machines and the view. 46 tests in total.
 
-### Datos de demostración (`chore/demo-data`)
+### Demo data (`chore/demo-data`)
 
-Con la app vacía, los indicadores no enseñan nada en una presentación, así que se añadió un cargador de 14 averías realistas con fechas relativas a "ahora". Pide una segunda pulsación antes de reemplazar o borrar datos, y tiene tests que comprueban que las fechas son coherentes. 50 tests en total.
+With an empty app the indicators show nothing in a presentation, so a loader of 14 realistic breakdowns was added, with dates relative to "now". It asks for a second click before replacing or deleting data, and its tests check that the dates are consistent. 50 tests in total.
 
-### Prompt 4.2 (igual en todas las historias)
+### Prompt 4.2 (same for every story)
 
 > Write the tests for the feature you just built: normal cases, edge cases, and expected errors. Then run the whole test suite (not just the new tests) and show me the result. If something fails, explain the cause before fixing it. Don't change a test just to make it pass.
 
-### Prompt 4.4 (igual en todas las historias)
+### Prompt 4.4 (same for every story)
 
 > The feature is validated. Commit the changes with a Conventional Commits message, push the feature/[name] branch to GitHub, merge it into develop, and push develop. Show me the git commands before running them and tell me if there are any conflicts.
 
-## 3. Publicar el MVP (pasos 5.1–5.4)
+## 3. Publishing the MVP (steps 5.1–5.4)
 
 > Check that US-01 to US-03 are complete, that there are no secrets or data in Git, and that lint, tests, and build pass. Give me a short report and the commands to merge develop into main.
 
@@ -86,10 +86,10 @@ git tag v0.1.0
 git push origin main --tags
 ```
 
-Después, en Vercel: Add New → Project → importar el repositorio (Vite, salida `dist`, rama de producción `main`) → Deploy. Y un monitor en UptimeRobot sobre `/api/health`.
+Then, in Vercel: Add New → Project → import the repository (Vite, output `dist`, production branch `main`) → Deploy. And an UptimeRobot monitor on `/api/health`.
 
-## 4. Lecciones
+## 4. Lessons learned
 
-1. **El CLAUDE.md es la mitad del trabajo.** Las reglas *"implement only the user story requested"* y *"never change a test just to make it pass"* mantuvieron el alcance bajo control.
-2. **Los tests no sustituyen mirar la app.** El fallo del borde y el problema de los datos por navegador solo aparecieron al probar como un usuario.
-3. **Un MVP honesto dice lo que no hace.** La limitación más importante (datos no compartidos entre dispositivos) es justo el siguiente paso del producto.
+1. **CLAUDE.md is half of the work.** The rules *"implement only the user story requested"* and *"never change a test just to make it pass"* kept the scope under control.
+2. **Tests do not replace looking at the app.** The border bug and the data-per-browser problem only appeared when testing like a user.
+3. **An honest MVP says what it does not do.** The most important limitation (data not shared between devices) is exactly the next step of the product.
