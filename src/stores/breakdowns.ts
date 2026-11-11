@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import type { Breakdown, BreakdownInput } from '../types/breakdown'
-import { createBreakdown } from '../domain/breakdowns'
+import type { Breakdown, BreakdownInput, Status } from '../types/breakdown'
+import { changeStatus, createBreakdown } from '../domain/breakdowns'
 import { loadBreakdowns, newId, saveBreakdowns } from '../services/breakdownService'
 
 export const useBreakdownsStore = defineStore('breakdowns', () => {
@@ -21,5 +21,13 @@ export const useBreakdownsStore = defineStore('breakdowns', () => {
     return breakdown
   }
 
-  return { items, loaded, load, report }
+  async function setStatus(id: string, to: Status): Promise<void> {
+    const current = items.value.find((b) => b.id === id)
+    if (!current) throw new Error(`Breakdown not found: ${id}`)
+    const updated = changeStatus(current, to, new Date())
+    items.value = items.value.map((b) => (b.id === id ? updated : b))
+    await saveBreakdowns(items.value)
+  }
+
+  return { items, loaded, load, report, setStatus }
 })

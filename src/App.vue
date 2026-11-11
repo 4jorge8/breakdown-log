@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { RouterLink, RouterView } from 'vue-router'
 
-const links = [{ to: '/', label: 'Registrar' }]
+const links = [
+  { to: '/', label: 'Registrar' },
+  { to: '/breakdowns', label: 'Averías' },
+]
 </script>
 
 <template>
