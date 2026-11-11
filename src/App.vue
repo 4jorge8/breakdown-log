@@ -1,5 +1,9 @@
 <script setup lang="ts">
 import { RouterLink, RouterView } from 'vue-router'
+import DemoBar from './components/DemoBar.vue'
+import { useBreakdownsStore } from './stores/breakdowns'
+
+const store = useBreakdownsStore()
 
 const links = [
   { to: '/', label: 'Registrar' },
@@ -29,4 +33,8 @@ const links = [
   <main class="mx-auto max-w-5xl p-4 sm:p-6">
     <RouterView />
   </main>
+  <footer class="mx-auto max-w-5xl border-t border-slate-200 px-4 py-4 sm:px-6">
+    <DemoBar @load-sample="store.loadSample()" @clear-all="store.clearAll()" />
+    <p class="mt-2 text-xs text-slate-400">Los datos se guardan solo en este navegador. Proyecto final · Building Digital Products with Generative AI · 2026</p>
+  </footer>
 </template>
