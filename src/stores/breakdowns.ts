@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import type { Breakdown, BreakdownInput, Status } from '../types/breakdown'
 import { changeStatus, createBreakdown } from '../domain/breakdowns'
 import { loadBreakdowns, newId, saveBreakdowns } from '../services/breakdownService'
+import { sampleBreakdowns } from '../data/sampleData'
 
 export const useBreakdownsStore = defineStore('breakdowns', () => {
   const items = ref<Breakdown[]>([])
@@ -29,5 +30,16 @@ export const useBreakdownsStore = defineStore('breakdowns', () => {
     await saveBreakdowns(items.value)
   }
 
-  return { items, loaded, load, report, setStatus }
+  /** Demo only: replaces all data with realistic sample breakdowns. */
+  async function loadSample(): Promise<void> {
+    items.value = sampleBreakdowns(new Date())
+    await saveBreakdowns(items.value)
+  }
+
+  async function clearAll(): Promise<void> {
+    items.value = []
+    await saveBreakdowns(items.value)
+  }
+
+  return { items, loaded, load, report, setStatus, loadSample, clearAll }
 })
