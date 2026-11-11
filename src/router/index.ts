@@ -1,7 +1,11 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import ReportView from '../views/ReportView.vue'
+import BreakdownsView from '../views/BreakdownsView.vue'
 
 export const router = createRouter({
   history: createWebHistory(),
-  routes: [{ path: '/', name: 'report', component: ReportView }],
+  routes: [
+    { path: '/', name: 'report', component: ReportView },
+    { path: '/breakdowns', name: 'breakdowns', component: BreakdownsView },
+  ],
 })
