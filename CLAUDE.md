@@ -82,6 +82,18 @@ docker compose up   # dev server inside Docker -> http://localhost:5173
 - Releases: merge `develop` into `main` only with the user's approval.
 - Conventional Commits: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`, `build`, `ci`. Summary in English, lowercase, no trailing period.
 
+## Agents and skills
+
+Specialized agents in `.claude/agents/` and skills in `.claude/skills/`. Use them in every cycle:
+
+| When | Use |
+| --- | --- |
+| Right after implementing a story | `tester` agent: tests for normal, edge and error cases |
+| Before merging a branch into `develop` | `/review` skill: lint + tests + build + `code-reviewer` agent |
+| After a merge or a deployment | `/smoke-test` skill: the 3 main flows in a real browser |
+| End of every feature | `docs-writer` agent: CHANGELOG, README, docs/ai-workflow.md |
+| Publishing a version | `/release` skill: checks, changelog, version and tag, with the user's approval |
+
 ## Working rules
 
 - Before writing code for a feature, explain the plan and the files you will touch.
