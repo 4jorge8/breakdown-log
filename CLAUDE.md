@@ -9,7 +9,7 @@ Line operators report machine breakdowns from any device in seconds; maintenance
 
 It replaces breakdowns reported by word of mouth or on paper. Minimum moment of value: an operator reports a breakdown and the technician sees it in the list immediately.
 
-The MVP runs entirely in the browser: data is stored in `localStorage` behind a service layer, so a real REST API and database can replace it later without changing views or stores.
+Since v0.2.0 the data is shared between devices through a REST API (`/api/breakdowns`, Vercel functions + Upstash Redis). When the API is not available (local development, or no database connected) the service layer falls back to `localStorage`, so the app always works.
 
 ## User stories
 
@@ -35,6 +35,7 @@ Backlog: users with login and roles, notifications, MTBF and OEE indicators, mac
 - Vitest + Vue Test Utils (jsdom)
 - Docker + docker compose, DevContainer
 - Deploy: Vercel (static build to `dist/`, serverless functions in `/api`)
+- Shared storage: Upstash Redis (Vercel Marketplace), `@upstash/redis`
 
 ## Architecture
 
@@ -46,18 +47,21 @@ src/
   views/           # route-level pages
   components/      # presentational UI, props in / events out
   stores/          # Pinia stores (breakdowns)
-  services/        # data access - the ONLY layer that touches storage
-  domain/          # pure business logic (sorting, status transitions, metrics)
-  types/           # shared models: Breakdown, Machine, Priority, Status
-  data/            # static data: plant machines
+  services/        # data access - the ONLY layer that touches storage (cloud API or localStorage)
+  domain/          # pure business logic (validation, sorting, status transitions, metrics, CSV)
+  server/          # API logic as Request -> Response, Redis and in-memory stores
+  types/           # shared models: Breakdown, Machine, Priority, Status, StorageMode
+  data/            # static data: plant machines, sample data
 tests/             # Vitest specs, mirroring src/
-api/               # Vercel serverless functions (health check)
+api/               # Vercel functions: breakdowns (shared storage), health
 docs/              # project documentation (AI workflow, prompts)
 ```
 
 ### Rules
 
-- Data flow: `views -> stores -> services -> localStorage`. Components never import services.
+- Data flow: `views -> stores -> services -> API or localStorage`. Components never import services.
+- The server validates every input with the same `src/domain/` rules as the UI; never trust the client.
+- Files used by Vercel functions (`api/`, `src/server/`, and what they import) run as Node ESM: relative imports end in `.js`. `tsconfig.api.json` checks it.
 - Business logic (MTTR, downtime, sorting, allowed status changes) lives in `src/domain/` as pure, tested functions.
 - All shared models are typed in `src/types/`. No `any`.
 - Use `<script setup lang="ts">` and the Composition API.
