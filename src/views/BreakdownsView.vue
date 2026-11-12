@@ -21,7 +21,9 @@ const resolved = computed(() => resolvedHistory(store.items))
 const shown = computed(() => (tab.value === 'pending' ? pending.value : resolved.value))
 
 function onChangeStatus(id: string, to: Status) {
-  store.setStatus(id, to)
+  store.setStatus(id, to).catch(() => {
+    // the store shows the error banner
+  })
 }
 </script>
 
