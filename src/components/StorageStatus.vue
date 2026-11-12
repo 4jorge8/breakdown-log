@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { StorageMode } from '../services/breakdownService'
+import type { StorageMode } from '../types/breakdown'
 
 defineProps<{ mode: StorageMode | null }>()
 </script>

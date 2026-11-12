@@ -1,4 +1,4 @@
-import type { Breakdown, BreakdownInput, Status } from '../types/breakdown'
+import type { Breakdown, BreakdownInput, Status, StorageMode } from '../types/breakdown'
 import { changeStatus, createBreakdown, isValidBreakdown } from '../domain/breakdowns'
 
 /**
@@ -11,8 +11,6 @@ import { changeStatus, createBreakdown, isValidBreakdown } from '../domain/break
  *
  * Both implement the same async interface, so stores and views don't know which one is used.
  */
-export type StorageMode = 'cloud' | 'local'
-
 export interface BreakdownRepository {
   mode: StorageMode
   list(): Promise<Breakdown[]>

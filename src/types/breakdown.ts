@@ -33,3 +33,6 @@ export interface BreakdownInput {
 }
 
 export type InputErrors = Partial<Record<keyof BreakdownInput, string>>
+
+/** Where the data lives: shared API (all devices) or this browser only. */
+export type StorageMode = 'cloud' | 'local'

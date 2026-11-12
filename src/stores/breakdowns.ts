@@ -1,8 +1,8 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import type { Breakdown, BreakdownInput, Status } from '../types/breakdown'
-import { connect, type BreakdownRepository, type StorageMode } from '../services/breakdownService'
-import { createBreakdown } from '../domain/breakdowns'
+import type { Breakdown, BreakdownInput, Status, StorageMode } from '../types/breakdown'
+import { connect, type BreakdownRepository } from '../services/breakdownService'
+import { validateBreakdownInput } from '../domain/breakdowns'
 import { sampleBreakdowns } from '../data/sampleData'
 
 const ERROR_MESSAGE = 'No se ha podido guardar. Revisa la conexión e inténtalo de nuevo.'
@@ -48,7 +48,9 @@ export const useBreakdownsStore = defineStore('breakdowns', () => {
   }
 
   async function report(input: BreakdownInput): Promise<Breakdown> {
-    createBreakdown(input, new Date(), 'check') // validate before any request
+    if (Object.keys(validateBreakdownInput(input)).length > 0) {
+      throw new Error('Invalid breakdown input') // never send invalid data to the server
+    }
     const breakdown = await withRepo((r) => r.create(input))
     items.value = [...items.value.filter((b) => b.id !== breakdown.id), breakdown]
     return breakdown
