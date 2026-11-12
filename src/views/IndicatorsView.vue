@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
 import KpiTile from '../components/KpiTile.vue'
+import ExportButton from '../components/ExportButton.vue'
+import { breakdownsToCsv, csvFileName } from '../domain/export'
 import { MACHINES } from '../data/machines'
 import { formatHours, machineIndicators, plantIndicators } from '../domain/metrics'
 import { useBreakdownsStore } from '../stores/breakdowns'
@@ -13,6 +15,17 @@ const plant = computed(() => plantIndicators(store.items, now))
 const rows = computed(() => machineIndicators(store.items, MACHINES, now))
 const maxDowntime = computed(() => Math.max(...rows.value.map((r) => r.downtimeHours), 0))
 
+function downloadCsv() {
+  const now = new Date()
+  const blob = new Blob([breakdownsToCsv(store.items, MACHINES, now)], { type: 'text/csv;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = csvFileName(now)
+  link.click()
+  URL.revokeObjectURL(url)
+}
+
 function barWidth(hours: number): string {
   return maxDowntime.value > 0 ? `${(hours / maxDowntime.value) * 100}%` : '0%'
 }
@@ -20,8 +33,13 @@ function barWidth(hours: number): string {
 
 <template>
   <section>
-    <h1 class="text-xl font-bold text-slate-900">Indicadores de mantenimiento</h1>
-    <p class="text-sm text-slate-600">Qué máquinas paran más y cuánto se tarda en resolver sus averías.</p>
+    <div class="flex flex-wrap items-end justify-between gap-3">
+      <div>
+        <h1 class="text-xl font-bold text-slate-900">Indicadores de mantenimiento</h1>
+        <p class="text-sm text-slate-600">Qué máquinas paran más y cuánto se tarda en resolver sus averías.</p>
+      </div>
+      <ExportButton :disabled="plant.breakdowns === 0" @export="downloadCsv" />
+    </div>
 
     <div class="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
       <KpiTile label="Averías registradas" :value="String(plant.breakdowns)" />

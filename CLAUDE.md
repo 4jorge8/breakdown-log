@@ -19,7 +19,12 @@ MVP:
 - **US-02** As a maintenance technician, I want to see the open breakdowns sorted by priority and change their status (open → in progress → resolved), so that I know what to attend to first.
 - **US-03** As the maintenance manager, I want to see per machine the number of breakdowns, the downtime hours and the MTTR, so that I can decide where to invest in preventive maintenance.
 
-Backlog: CSV/Excel export, users with login and a shared database, notifications, MTBF and OEE indicators, machine management screen.
+v0.2.0:
+
+- **US-04** As the maintenance manager, I want to export all breakdowns to a file I can open in Excel, so that I can analyse them and add them to my monthly report.
+- **US-05** As a technician, I want to see the breakdowns reported from any device, so that an operator's report on their phone reaches me on my PC.
+
+Backlog: users with login and roles, notifications, MTBF and OEE indicators, machine management screen.
 
 ## Stack
 
