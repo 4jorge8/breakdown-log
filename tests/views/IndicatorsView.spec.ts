@@ -35,3 +35,35 @@ describe('IndicatorsView', () => {
     expect(kpis).toEqual(['2', '0', '3,0 h', '2,0 h'])
   })
 })
+
+describe('IndicatorsView · export', () => {
+  beforeEach(() => {
+    localStorage.clear()
+    setActivePinia(createPinia())
+  })
+
+  it('disables the export when there is nothing to export', async () => {
+    const wrapper = mount(IndicatorsView)
+    await flushPromises()
+    expect(wrapper.find('[data-test="export"]').attributes('disabled')).toBeDefined()
+  })
+
+  it('downloads a CSV file named with the date', async () => {
+    await saveBreakdowns([breakdown()])
+    const created: string[] = []
+    let downloaded = ''
+    URL.createObjectURL = () => 'blob:test'
+    URL.revokeObjectURL = () => {}
+    const click = HTMLAnchorElement.prototype.click
+    HTMLAnchorElement.prototype.click = function () {
+      created.push(this.href)
+      downloaded = this.download
+    }
+    const wrapper = mount(IndicatorsView)
+    await flushPromises()
+    await wrapper.find('[data-test="export"]').trigger('click')
+    HTMLAnchorElement.prototype.click = click
+    expect(created).toEqual(['blob:test'])
+    expect(downloaded).toMatch(/^averias-\d{4}-\d{2}-\d{2}\.csv$/)
+  })
+})
