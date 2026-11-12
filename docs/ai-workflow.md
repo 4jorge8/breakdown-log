@@ -1,4 +1,4 @@
-# AI workflow: from idea to MVP
+# AI workflow: from idea to MVP and v0.2.0
 
 How *Registro de Averías* (Breakdown Log) was built with an AI agent (Claude), following the course workflow (*Development workflow with AI agents*): set up the project (steps 3.1–3.3) and repeat one cycle per user story (steps 4.1–4.4).
 
@@ -88,8 +88,63 @@ git push origin main --tags
 
 Then, in Vercel: Add New → Project → import the repository (Vite, output `dist`, production branch `main`) → Deploy. And an UptimeRobot monitor on `/api/health`.
 
-## 4. Lessons learned
+## 4. Version 0.2.0: improving with agents and skills
+
+After publishing the MVP, I asked to make the project as good as possible before the presentation. The agent compared it with the final project brief (module 7) and proposed three improvements:
+
+1. **Agents and skills** were missing. The brief asks for them in section 4 of the README.
+2. **An item from the backlog** (CSV export), to show the continuous improvement cycle of module 6.
+3. **The main limitation of the MVP**: data not shared between devices.
+
+I chose all three.
+
+### Agents and skills (`chore/agents-skills`)
+
+Created in `.claude/` and listed in CLAUDE.md with **when** to use each one:
+
+| Type | Name | Purpose |
+| --- | --- | --- |
+| Agent | `tester` | Tests for normal, edge and error cases |
+| Agent | `code-reviewer` | Read-only review against the CLAUDE.md rules, with a verdict |
+| Agent | `docs-writer` | Keeps the documentation in sync |
+| Skill | `/review` | Lint + tests + build + code review |
+| Skill | `/smoke-test` | The main flows in a real browser |
+| Skill | `/release` | Release checklist, waiting for my approval |
+
+They were then used in the two cycles below.
+
+### US-04 · Export to CSV (`feature/csv-export`)
+
+> I want to build this feature: As the maintenance manager, I want to export all breakdowns to a file I can open in Excel, so that I can analyse them and add them to my monthly report. Acceptance criteria: the file opens correctly in Excel in Spanish (";" separator, decimal comma, accents); one row per breakdown with machine, area, priority, status, dates, downtime and time to resolve; the button is disabled when there is nothing to export; the file name includes the date. Create a feature/csv-export branch from develop. Before writing any code, explain your plan…
+
+- **Tests:** 9 new tests (headers, Spanish labels, empty cells, escaping, unknown machines, file name, button).
+- **Browser test:** downloaded the file and read it back as Excel would: 14 rows, accents correct.
+- **`/review` found a security problem:** a description starting with `=` would be executed by Excel as a formula (CSV injection). Fixed in its own commit (`fix(export): …`), with a test.
+
+### US-05 · Shared storage (`feature/shared-storage`)
+
+> I want to build this feature: As a technician, I want to see the breakdowns reported from any device, so that an operator's report on their phone reaches me on my PC. Acceptance criteria: a REST API in Vercel functions with Upstash Redis; every input validated on the server with the same rules as the UI; rate limiting on writes; if the database is not configured, the app keeps working with browser storage and says so; other devices' breakdowns appear without reloading. Create a feature/shared-storage branch from develop. Before writing any code, explain your plan…
+
+Design decisions:
+
+- **The API logic is a pure `Request -> Response` function** (`src/server/breakdownsApi.ts`) with an injected store. It is tested with an in-memory store, and the Vercel function only connects it to Redis.
+- **Fallback instead of failure.** If `/api/breakdowns` does not answer with a list (no database, local development, network error), the service uses `localStorage`. The footer always says which mode is active, so publishing v0.2.0 cannot break the live app.
+- **Same rules on both sides.** The server validates with `src/domain/`, sets the id and the time itself, and only allows the valid status transitions.
+
+Results:
+
+- **Tests:** 36 new tests (API with every method and error, rate limiting, limits, Redis store with a fake client, cloud repository, fallback in 4 situations, store errors). 95 in total.
+- **End-to-end test with two separate browsers** against the real API code: report on the "phone" → visible on the "PC" → status changed on the PC → visible on the phone; demo data shared; without a database, the app switches to browser mode.
+- **`/review` found two issues:** a component importing a type from the service layer (against CLAUDE.md), and an unclear validation trick in the store. Both fixed before merging.
+- **A risk caught by tooling:** Vercel runs functions as Node ESM, where relative imports need `.js`. A `tsconfig.api.json` with Node rules makes `npm run lint` fail if that is wrong.
+
+### Release 0.2.0 (`/release`)
+
+Lint, 95 tests and build passing, no secrets in Git, CHANGELOG and version updated. Merged into `main` with my approval and tagged `v0.2.0`. On Vercel: connect *Upstash for Redis* in **Storage** and redeploy.
+
+## 5. Lessons learned
 
 1. **CLAUDE.md is half of the work.** The rules *"implement only the user story requested"* and *"never change a test just to make it pass"* kept the scope under control.
 2. **Tests do not replace looking at the app.** The border bug and the data-per-browser problem only appeared when testing like a user.
-3. **An honest MVP says what it does not do.** The most important limitation (data not shared between devices) is exactly the next step of the product.
+3. **An honest MVP says what it does not do.** The most important limitation of 0.1.0 (data not shared between devices) became the main story of 0.2.0.
+4. **A review step pays off.** `/review` found a security problem (CSV injection) that no test was looking for, because nobody had thought of it yet.
