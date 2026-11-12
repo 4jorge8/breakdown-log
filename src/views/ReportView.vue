@@ -9,8 +9,13 @@ const store = useBreakdownsStore()
 const confirmation = ref('')
 
 async function onSubmit(input: BreakdownInput) {
-  const breakdown = await store.report(input)
-  confirmation.value = `Avería registrada en ${machineName(breakdown.machineId)}. Mantenimiento ya la tiene en su lista.`
+  confirmation.value = ''
+  try {
+    const breakdown = await store.report(input)
+    confirmation.value = `Avería registrada en ${machineName(breakdown.machineId)}. Mantenimiento ya la tiene en su lista.`
+  } catch {
+    // the store shows the error banner
+  }
 }
 </script>
 

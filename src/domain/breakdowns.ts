@@ -1,5 +1,5 @@
-import type { Breakdown, BreakdownInput, InputErrors, Priority, Status } from '../types/breakdown'
-import { MACHINES } from '../data/machines'
+import type { Breakdown, BreakdownInput, InputErrors, Priority, Status } from '../types/breakdown.js'
+import { MACHINES } from '../data/machines.js'
 
 export const PRIORITY_LABELS: Record<Priority, string> = {
   high: 'Alta',
@@ -113,4 +113,39 @@ export function formatDuration(ms: number): string {
   if (hours < 24) return minutes % 60 ? `${hours} h ${minutes % 60} min` : `${hours} h`
   const days = Math.floor(hours / 24)
   return hours % 24 ? `${days} d ${hours % 24} h` : `${days} d`
+}
+
+// ---------- US-05: validating records that come from outside (API, storage) ----------
+
+const STATUSES: Status[] = ['open', 'in_progress', 'resolved']
+const PRIORITIES: Priority[] = ['high', 'medium', 'low']
+
+function isIsoDate(value: unknown): value is string {
+  return typeof value === 'string' && !Number.isNaN(Date.parse(value))
+}
+
+export function isStatus(value: unknown): value is Status {
+  return STATUSES.includes(value as Status)
+}
+
+/** True when an unknown value is a complete, consistent breakdown record. */
+export function isValidBreakdown(value: unknown): value is Breakdown {
+  if (typeof value !== 'object' || value === null) return false
+  const b = value as Record<string, unknown>
+  if (typeof b.id !== 'string' || b.id.length === 0 || b.id.length > 64) return false
+  if (typeof b.machineStopped !== 'boolean' || !isStatus(b.status) || !isIsoDate(b.reportedAt)) return false
+  if (!PRIORITIES.includes(b.priority as Priority)) return false
+  if (typeof b.machineId !== 'string' || typeof b.description !== 'string' || typeof b.reportedBy !== 'string') return false
+  const inputErrors = validateBreakdownInput({
+    machineId: b.machineId,
+    description: b.description,
+    priority: b.priority as Priority,
+    machineStopped: b.machineStopped,
+    reportedBy: b.reportedBy,
+  })
+  if (Object.keys(inputErrors).length > 0) return false
+  if (b.startedAt !== undefined && !isIsoDate(b.startedAt)) return false
+  if (b.resolvedAt !== undefined && !isIsoDate(b.resolvedAt)) return false
+  if (b.status === 'resolved' && b.resolvedAt === undefined) return false
+  return true
 }

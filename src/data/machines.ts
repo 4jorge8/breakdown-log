@@ -1,4 +1,4 @@
-import type { Machine } from '../types/breakdown'
+import type { Machine } from '../types/breakdown.js'
 
 /** Machines of the plant (a plastic film factory). Editable here until the backlog item "machine management" exists. */
 export const MACHINES: Machine[] = [
