@@ -22,6 +22,14 @@ export const CSV_HEADERS = [
   'Horas hasta resolver',
 ]
 
+/**
+ * Free text written by users must not be run by Excel as a formula
+ * (CSV injection): a leading = + - @ is neutralised with an apostrophe.
+ */
+function neutraliseFormula(value: string): string {
+  return /^[=+\-@\t\r]/.test(value) ? `'${value}` : value
+}
+
 function escapeCell(value: string): string {
   return /[";\n\r]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value
 }
@@ -48,10 +56,10 @@ export function breakdownsToCsv(list: Breakdown[], machines: Machine[], now: Dat
         b.id,
         machine?.name ?? b.machineId,
         machine?.area ?? '',
-        b.description,
+        neutraliseFormula(b.description),
         PRIORITY_LABELS[b.priority],
         b.machineStopped ? 'Sí' : 'No',
-        b.reportedBy,
+        neutraliseFormula(b.reportedBy),
         STATUS_LABELS[b.status],
         formatDate(b.reportedAt),
         formatDate(b.startedAt),

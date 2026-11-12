@@ -59,6 +59,12 @@ describe('breakdownsToCsv', () => {
     expect(csv).toContain('"Ruido; ""fuerte""\nen el eje"')
   })
 
+  it('does not let Excel run user text as a formula (CSV injection)', () => {
+    const [, row] = rows(breakdownsToCsv([breakdown({ description: '=HYPERLINK("http://x")', reportedBy: '+Ana' })], MACHINES, now))
+    expect(row).toContain(`"'=HYPERLINK(""http://x"")"`)
+    expect(row.split(';')[6]).toBe("'+Ana")
+  })
+
   it('keeps unknown machines visible by their id', () => {
     const [, row] = rows(breakdownsToCsv([breakdown({ machineId: 'old-press' })], MACHINES, now))
     expect(row.split(';')[1]).toBe('old-press')
